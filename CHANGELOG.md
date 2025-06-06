@@ -8,6 +8,7 @@ Changelog
 - **Enhancement:** Check for context parameters in top-level function injection checker.
 - **Enhancement:** Improve graph validation performance by avoiding unnecessary intermediate sorts (again).
 - **Enhancement:** Store member injection info in metro metadata to slightly optimize member injection code gen.
+- **Enhancement:** Enable child graphs to depend on parent-scoped dependencies that are unused and not referenced in the parent scope. This involves generating hints for scoped @Inject classes and is gated on a new Metro option `enableInjectConstructorHints`.
 - **Fix:** Fix support for repeated contributes annotations by moving contribution binding function generation to IR.
 - **Fix:** Ensure scope/qualifier annotation changes on constructor-injected classes dirty consuming graphs in incremental compilation.
 - **Fix:** Support constructing nested function return types for provider functions.

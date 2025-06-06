@@ -7,6 +7,7 @@ import dev.zacsweers.metro.compiler.Symbols.FqNames.metroHintsPackage
 import dev.zacsweers.metro.compiler.Symbols.StringNames.METRO_RUNTIME_INTERNAL_PACKAGE
 import dev.zacsweers.metro.compiler.Symbols.StringNames.METRO_RUNTIME_PACKAGE
 import dev.zacsweers.metro.compiler.Symbols.StringNames.PROVIDES_CALLABLE_ID
+import dev.zacsweers.metro.compiler.ir.IrAnnotation
 import dev.zacsweers.metro.compiler.ir.IrContextualTypeKey
 import dev.zacsweers.metro.compiler.ir.IrMetroContext
 import dev.zacsweers.metro.compiler.ir.irInvoke
@@ -118,6 +119,20 @@ internal class Symbols(
   object CallableIds {
     fun scopeHint(scopeClassId: ClassId): CallableId {
       return CallableId(metroHintsPackage, scopeClassId.joinSimpleNames().shortClassName)
+    }
+
+    fun scopedInjectHint(scopeAnnotation: IrAnnotation): CallableId {
+      return CallableId(
+        metroHintsPackage,
+        ("scopedInjectHintFor" + scopeAnnotation.hashCode()).asName(),
+      )
+    }
+
+    fun scopedInjectAccessor(scopeAnnotation: IrAnnotation): CallableId {
+      return CallableId(
+        metroHintsPackage,
+        ("scopedInjectAccessorFor" + scopeAnnotation.hashCode()).asName(),
+      )
     }
   }
 

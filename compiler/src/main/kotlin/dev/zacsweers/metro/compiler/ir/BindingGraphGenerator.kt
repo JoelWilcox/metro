@@ -11,8 +11,11 @@ import dev.zacsweers.metro.compiler.ir.parameters.Parameters
 import dev.zacsweers.metro.compiler.ir.parameters.parameters
 import dev.zacsweers.metro.compiler.ir.transformers.InjectConstructorTransformer
 import dev.zacsweers.metro.compiler.ir.transformers.MembersInjectorTransformer
+import org.jetbrains.kotlin.ir.types.classFqName
+import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.util.classId
 import org.jetbrains.kotlin.ir.util.classIdOrFail
+import org.jetbrains.kotlin.ir.util.companionObject
 import org.jetbrains.kotlin.ir.util.dumpKotlinLike
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.parentAsClass
@@ -28,6 +31,7 @@ internal class BindingGraphGenerator(
   // TODO preprocess these instead and just lookup via irAttribute
   private val injectConstructorTransformer: InjectConstructorTransformer,
   private val membersInjectorTransformer: MembersInjectorTransformer,
+  private val injectClassData: IrInjectClassData,
 ) : IrMetroContext by metroContext {
   fun generate(): IrBindingGraph {
     val graph =
@@ -418,6 +422,26 @@ internal class BindingGraphGenerator(
           )
 
         graph.addBinding(typeKey, binding, bindingStack)
+      }
+    }
+
+    node.scopes.forEach { scope ->
+      val scopedClasses = injectClassData[scope]
+      val scopedInjectAccessorName = Symbols.CallableIds.scopedInjectAccessor(scope).callableName
+      scopedClasses.forEach { scopedClass ->
+        val clazz = scopedClass.getClass() ?: error("No class found for $scopedClass")
+        val companion = clazz.companionObject() ?: error("No companion found for ${scopedClass.classFqName}")
+        val scopedInjectAccessor = companion.functions.single {
+          it.name == scopedInjectAccessorName
+        }
+
+        val contextKey = IrContextualTypeKey.from(this, scopedInjectAccessor)
+
+        graph.addAccessor(
+          contextKey,
+          IrBindingStack.Entry.requestedAt(contextKey, scopedInjectAccessor),
+        )
+        trackFunctionCall(node.sourceGraph, scopedInjectAccessor)
       }
     }
 

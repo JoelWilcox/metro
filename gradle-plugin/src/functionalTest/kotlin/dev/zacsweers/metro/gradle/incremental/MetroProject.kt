@@ -7,7 +7,10 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.GradleProject.DslKind
 import com.autonomousapps.kit.Source
 
-abstract class MetroProject(private val debug: Boolean = false) : AbstractGradleProject() {
+abstract class MetroProject(
+  private val debug: Boolean = false,
+  private val metroOptions: MetroOptionOverrides = MetroOptionOverrides(),
+) : AbstractGradleProject() {
   protected abstract fun sources(): List<Source>
 
   val gradleProject: GradleProject
@@ -17,17 +20,27 @@ abstract class MetroProject(private val debug: Boolean = false) : AbstractGradle
           sources = this@MetroProject.sources()
           withBuildScript {
             plugins(GradlePlugins.Kotlin.jvm, GradlePlugins.metro)
-            if (debug) {
-              withKotlin(
-                """
+            val debugSettings = if (debug) {
+              """
+                debug.set(true)
+                reportsDestination.set(layout.buildDirectory.dir("metro"))
+              """.trimIndent()
+            } else {
+              ""
+            }
+            val overrideInjectClassHints = metroOptions.enableInjectConstructorHints?.let {
+              "enableInjectConstructorHints.set($it)"
+            }.orEmpty()
+
+            withKotlin(
+              """
                 metro {
-                  debug.set(true)
-                  reportsDestination.set(layout.buildDirectory.dir("metro"))
+                  $debugSettings
+                  $overrideInjectClassHints
                 }
                 """
-                  .trimIndent()
-              )
-            }
+                .trimIndent()
+            )
           }
         }
         .write()

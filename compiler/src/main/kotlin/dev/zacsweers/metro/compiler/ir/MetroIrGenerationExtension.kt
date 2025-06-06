@@ -45,10 +45,23 @@ public class MetroIrGenerationExtension(
             moduleFragment.transform(ContributionBindsFunctionsIrTransformer(context), null)
           }
 
+          // First.6 - transform scoped @Inject types to add their hints
+          // TODO(joel) Need to consolidate terminology (scoped inject vs inject class etc)
+          val scopedInjectTransformer = IrInjectClassTransformer(context, moduleFragment)
+          tracer.traceNested("Transforming scoped @Inject types") {
+            moduleFragment.transform(scopedInjectTransformer, null)
+          }
+
           // Second - transform the dependency graphs
           tracer.traceNested("Core transformers") { nestedTracer ->
             val dependencyGraphTransformer =
-              DependencyGraphTransformer(context, moduleFragment, contributionData, nestedTracer)
+              DependencyGraphTransformer(
+                context,
+                moduleFragment,
+                contributionData,
+                scopedInjectTransformer.data,
+                nestedTracer,
+              )
             moduleFragment.transform(dependencyGraphTransformer, null)
           }
         }

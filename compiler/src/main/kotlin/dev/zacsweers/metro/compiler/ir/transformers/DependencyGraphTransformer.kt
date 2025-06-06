@@ -18,6 +18,7 @@ import dev.zacsweers.metro.compiler.ir.IrBindingStack
 import dev.zacsweers.metro.compiler.ir.IrContextualTypeKey
 import dev.zacsweers.metro.compiler.ir.IrContributionData
 import dev.zacsweers.metro.compiler.ir.IrGraphGenerator
+import dev.zacsweers.metro.compiler.ir.IrInjectClassData
 import dev.zacsweers.metro.compiler.ir.IrMetroContext
 import dev.zacsweers.metro.compiler.ir.IrTypeKey
 import dev.zacsweers.metro.compiler.ir.MetroSimpleFunction
@@ -93,6 +94,7 @@ internal class DependencyGraphTransformer(
   context: IrMetroContext,
   moduleFragment: IrModuleFragment,
   private val contributionData: IrContributionData,
+  private val injectConstructorData: IrInjectClassData,
   private val parentTracer: Tracer,
 ) : IrElementTransformerVoid(), IrMetroContext by context {
 
@@ -723,6 +725,7 @@ internal class DependencyGraphTransformer(
             node,
             injectConstructorTransformer,
             membersInjectorTransformer,
+            injectConstructorData,
           )
           .generate()
       }
